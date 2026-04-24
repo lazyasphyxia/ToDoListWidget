@@ -1,15 +1,15 @@
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QLabel, QPushButton
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QLabel
+from PyQt6.QtCore import pyqtSignal, QTimer
 
 
 class TaskComponent(QWidget):
-    # Сигналы, чтобы окно узнало, когда задачу удалили или изменили
     deleted = pyqtSignal()
     changed = pyqtSignal()
 
     def __init__(self, task):
         super().__init__()
         self.task = task
+        self.original_text = task.text  # Запоминаем исходный текст задачи
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
@@ -27,17 +27,27 @@ class TaskComponent(QWidget):
             self.label.setStyleSheet("font-size: 14px; color: gray; text-decoration: line-through;")
         layout.addWidget(self.label, stretch=1)
 
-        # Кнопка удаления (крестик)
-        self.del_btn = QPushButton("×")
-        self.del_btn.setFixedSize(24, 24)
-        self.del_btn.setStyleSheet("background: transparent; color: #FF453A; font-size: 18px; border: none;")
-        self.del_btn.clicked.connect(self.deleted.emit)
-        layout.addWidget(self.del_btn)
-
     def on_toggle(self, state):
         self.task.completed = bool(state)
         if self.task.completed:
             self.label.setStyleSheet("font-size: 14px; color: gray; text-decoration: line-through;")
+            self.start_deletion_timer(3)
         else:
             self.label.setStyleSheet("font-size: 14px; color: white;")
+            # Если галочку сняли — возвращаем оригинальный текст.
+            self.label.setText(self.original_text)
+
         self.changed.emit()
+
+    def start_deletion_timer(self, seconds):
+        """Запускает обратный отсчет перед автоудалением отмеченной задачи."""
+        if not self.checkbox.isChecked():
+            return
+
+        if seconds > 0:
+            self.label.setText(f"{self.original_text} (удаление через {seconds}...)")
+            QTimer.singleShot(1000, lambda: self.start_deletion_timer(seconds - 1))
+            return
+
+        if self.checkbox.isChecked():
+            self.deleted.emit()

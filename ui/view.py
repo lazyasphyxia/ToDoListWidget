@@ -6,6 +6,9 @@ from .styles import STYLESHEET
 
 
 class TodoWidget(QMainWindow):
+    LOCKED_ICON = "\ue72e"    # Segoe MDL2 Assets: Lock
+    UNLOCKED_ICON = "\ue785"  # Segoe MDL2 Assets: Unlock
+
     def __init__(self):
         super().__init__()
 
@@ -30,7 +33,7 @@ class TodoWidget(QMainWindow):
         self.layout.setContentsMargins(15, 10, 15, 20)
 
         self.header_layout = QHBoxLayout()
-        self.lock_btn = QPushButton("🔓")
+        self.lock_btn = QPushButton(self.UNLOCKED_ICON)
         self.lock_btn.setFixedSize(30, 30)
         self.lock_btn.setObjectName("LockButton")
         self.lock_btn.clicked.connect(self.toggle_lock)
@@ -52,6 +55,7 @@ class TodoWidget(QMainWindow):
         self.layout.addWidget(self.input_field)
 
         self.add_button = QPushButton("Добавить")
+        self.add_button.setObjectName("AddButton")
         self.layout.addWidget(self.add_button)
 
         self.setStyleSheet(STYLESHEET)
@@ -90,7 +94,7 @@ class TodoWidget(QMainWindow):
 
     def toggle_lock(self):
         self.is_locked = not self.is_locked
-        self.lock_btn.setText("🔒" if self.is_locked else "🔓")
+        self.lock_btn.setText(self.LOCKED_ICON if self.is_locked else self.UNLOCKED_ICON)
 
         if self.is_locked:
             # 1. Скрываем элементы ввода
